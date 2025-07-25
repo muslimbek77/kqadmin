@@ -1,0 +1,13 @@
+db.sqlite3
+media/
+*.log
+*.pyc
+__pycache__/
+.env
+*.sqlite3
+*.db
+*.pyo
+*.pyd
+*.swp
+*.bak
+*.tmp

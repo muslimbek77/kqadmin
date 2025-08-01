@@ -17,6 +17,12 @@ class KorrupsiyaMalumotDetailView(RetrieveAPIView):
     queryset = KarrupsiyaMalumot.objects.all()
     serializer_class = KarrupsiyaMalumotSerializer
 
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.increment_seen_count()
+        return super().retrieve(request, *args, **kwargs)
+
+
 class KorrupsiyaFileListView(ListAPIView):
     queryset = KorrupsiyaFile.objects.all()
     serializer_class = KorrupsiyaFileSerializer

@@ -18,6 +18,7 @@ class KarrupsiyaMalumot(models.Model):
     title = models.CharField(max_length=200)
     image = models.ImageField(upload_to='korrupsiya_images/', blank=True, null=True)
     text = RichTextUploadingField()
+    seen_count = models.IntegerField(default=0, blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -25,6 +26,10 @@ class KarrupsiyaMalumot(models.Model):
 
     def __str__(self):
         return f"Malumot for {self.title}"
+    
+    def increment_seen_count(self):
+        self.seen_count += 1
+        self.save(update_fields=['seen_count'])
 
 class KorrupsiyaFile(models.Model):
     title = models.CharField(max_length=200)

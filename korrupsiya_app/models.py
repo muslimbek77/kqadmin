@@ -87,3 +87,32 @@ class Vacancy(models.Model):
 
     def __str__(self):
         return f"{self.company} - {self.title}"
+
+
+class Murojaat(models.Model):
+    class Status(models.TextChoices):
+        NEW = "new", "Yangi"
+        TUSHUNTIRILDI = "tushuntirildi", "Tushuntirildi"
+        QONIQTIRILDI = "qoniqtirildi", "Qoniqtirildi"
+        RAD_ETILDI = "rad_etildi", "Rad etildi"
+
+    phone_number = models.CharField(max_length=20)
+    address = models.CharField(max_length=500)
+    content = models.TextField()
+    attachment = models.FileField(upload_to="murojaatlar/", null=True, blank=True)
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.NEW,
+    )
+    assigned_telegram_chat_id = models.CharField(max_length=64, blank=True)
+    telegram_sent_at = models.DateTimeField(null=True, blank=True)
+    telegram_error = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"Murojaat #{self.pk} - {self.phone_number}"

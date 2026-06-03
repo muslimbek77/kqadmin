@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -132,7 +133,6 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
-import os
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
 
@@ -152,6 +152,7 @@ CKEDITOR_IMAGE_BACKEND = "pillow"
 
 # DRF Configuration
 REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'korrupsiya_app.schema.SafeAutoSchema',
     'DEFAULT_FILTER_BACKENDS': [
         'django_filters.rest_framework.DjangoFilterBackend',
         'rest_framework.filters.SearchFilter',
@@ -161,6 +162,9 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 20,
 }
 CKEDITOR_ALLOW_NONIMAGE_FILES = True
+
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
+TELEGRAM_DEFAULT_CHAT_ID = os.getenv("TELEGRAM_DEFAULT_CHAT_ID", "")
 
 
 CKEDITOR_CONFIGS = {

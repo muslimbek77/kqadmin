@@ -40,3 +40,50 @@ class KorrupsiyaFile(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class Vacancy(models.Model):
+    company = models.CharField(max_length=255)
+    title = models.CharField(max_length=255)
+
+    type = models.CharField(max_length=100, blank=True)
+    work_hours = models.CharField(max_length=100, blank=True)
+    location = models.CharField(max_length=255, blank=True)
+
+    salary = models.CharField(max_length=255, blank=True)
+    experience = models.CharField(max_length=255, blank=True)
+    education = models.CharField(max_length=255, blank=True)
+
+    published_date = models.DateField()
+    deadline = models.DateField(null=True, blank=True)
+
+    status = models.CharField(max_length=100)
+
+    # Flexible fields using JSONField for lists
+    responsibilities = models.JSONField(default=list, blank=True)
+    requirements = models.JSONField(default=list, blank=True)
+    languages = models.JSONField(default=list, blank=True)
+    conditions = models.JSONField(default=list, blank=True)
+    positions = models.JSONField(default=list, blank=True)
+
+    # Extra flexible field for additional data
+    extra = models.JSONField(default=dict, blank=True)
+
+    # Multilingual support (choose one approach based on your needs)
+    # Option 1: Separate fields
+    # title_uz = models.CharField(max_length=255, blank=True)
+    # title_ru = models.CharField(max_length=255, blank=True)
+    # title_en = models.CharField(max_length=255, blank=True)
+
+    # Option 2: JSONField with language keys
+    title_translations = models.JSONField(default=dict, blank=True)  # {"uz": "", "ru": "", "en": ""}
+    description_translations = models.JSONField(default=dict, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-published_date']
+
+    def __str__(self):
+        return f"{self.company} - {self.title}"

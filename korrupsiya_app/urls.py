@@ -3,7 +3,7 @@ from .views import (
     KorrupsiyaCreateView, KarrupsiyaMalumotListView, KorrupsiyaMalumotDetailView,
     KorrupsiyaFileListView, VacancyListAPIView, VacancyDetailAPIView,
     MurojaatListCreateAPIView, MurojaatDetailAPIView, MurojaatStatusUpdateAPIView,
-    MurojaatStatisticsAPIView,
+    MurojaatStatisticsAPIView, TelegramWebhookAPIView,
 )
 
 urlpatterns = [
@@ -21,4 +21,5 @@ urlpatterns = [
     path('murojaatlar/<int:pk>/', MurojaatDetailAPIView.as_view(), name='murojaat-detail'),
     path('murojaatlar/<int:pk>/status', MurojaatStatusUpdateAPIView.as_view()),
     path('murojaatlar/<int:pk>/status/', MurojaatStatusUpdateAPIView.as_view(), name='murojaat-status-update'),
+    path('telegram/webhook/', TelegramWebhookAPIView.as_view(), name='telegram-webhook'),
 ]

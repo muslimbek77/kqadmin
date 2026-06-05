@@ -40,17 +40,12 @@ class MurojaatSerializer(ModelSerializer):
             "attachment",
             "status",
             "status_display",
-            "assigned_telegram_chat_id",
-            "telegram_sent_at",
-            "telegram_error",
             "created_at",
             "updated_at",
         ]
         read_only_fields = [
             "status",
             "status_display",
-            "telegram_sent_at",
-            "telegram_error",
             "created_at",
             "updated_at",
         ]

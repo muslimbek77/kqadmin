@@ -1,11 +1,13 @@
 import json
+import mimetypes
+import os
 import urllib.error
 import urllib.request
+from uuid import uuid4
 
 from django.conf import settings
-from django.utils import timezone
 
-from .models import TelegramSettings
+from .models import Murojaat, TelegramSettings
 
 
 def _build_message(murojaat):
@@ -17,52 +19,176 @@ def _build_message(murojaat):
         f"Status: {murojaat.get_status_display()}",
         f"Mazmun: {murojaat.content}",
     ]
-    if murojaat.attachment:
-        lines.append(f"Fayl: {murojaat.attachment.url}")
     return "\n".join(lines)
 
 
 def _get_telegram_credentials():
     telegram_settings = TelegramSettings.load()
     token = telegram_settings.bot_token or getattr(settings, "TELEGRAM_BOT_TOKEN", "")
-    default_chat_id = telegram_settings.admin_chat_id or getattr(
-        settings, "TELEGRAM_DEFAULT_CHAT_ID", ""
-    )
-    return token, default_chat_id
+    chat_id = telegram_settings.admin_chat_id or getattr(settings, "TELEGRAM_DEFAULT_CHAT_ID", "")
+    return token, chat_id
+
+
+def _build_status_keyboard(murojaat):
+    statuses = [
+        (Murojaat.Status.TUSHUNTIRILDI, "Tushuntirildi"),
+        (Murojaat.Status.QONIQTIRILDI, "Qoniqtirildi"),
+        (Murojaat.Status.RAD_ETILDI, "Rad etildi"),
+    ]
+    buttons = []
+    for status_code, label in statuses:
+        prefix = "✅ " if murojaat.status == status_code else ""
+        buttons.append(
+            {
+                "text": f"{prefix}{label}",
+                "callback_data": f"murojaat_status:{murojaat.pk}:{status_code}",
+            }
+        )
+    return {"inline_keyboard": [buttons]}
+
+
+def _create_multipart_body(fields, files):
+    boundary = f"----WebKitFormBoundary{uuid4().hex}"
+    body = bytearray()
+
+    for name, value in fields.items():
+        body.extend(f"--{boundary}\r\n".encode("utf-8"))
+        body.extend(f'Content-Disposition: form-data; name="{name}"\r\n\r\n'.encode("utf-8"))
+        body.extend(str(value).encode("utf-8"))
+        body.extend(b"\r\n")
+
+    for name, file_info in files.items():
+        filename, content, content_type = file_info
+        body.extend(f"--{boundary}\r\n".encode("utf-8"))
+        body.extend(
+            (
+                f'Content-Disposition: form-data; name="{name}"; '
+                f'filename="{os.path.basename(filename)}"\r\n'
+            ).encode("utf-8")
+        )
+        body.extend(f"Content-Type: {content_type}\r\n\r\n".encode("utf-8"))
+        body.extend(content)
+        body.extend(b"\r\n")
+
+    body.extend(f"--{boundary}--\r\n".encode("utf-8"))
+    return bytes(body), boundary
+
+
+def _send_telegram_request(token, method, payload=None, files=None):
+    payload = payload or {}
+    files = files or {}
+    url = f"https://api.telegram.org/bot{token}/{method}"
+
+    if files:
+        body, boundary = _create_multipart_body(payload, files)
+        headers = {"Content-Type": f"multipart/form-data; boundary={boundary}"}
+        request = urllib.request.Request(url=url, data=body, headers=headers, method="POST")
+    else:
+        body = json.dumps(payload).encode("utf-8")
+        request = urllib.request.Request(
+            url=url,
+            data=body,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+
+    with urllib.request.urlopen(request, timeout=10) as response:
+        response_body = response.read()
+
+    if not response_body:
+        return {}
+    return json.loads(response_body.decode("utf-8"))
 
 
 def send_murojaat_to_telegram(murojaat):
-    token, default_chat_id = _get_telegram_credentials()
-    chat_id = murojaat.assigned_telegram_chat_id or default_chat_id
-
+    token, chat_id = _get_telegram_credentials()
     if not token or not chat_id:
-        murojaat.telegram_error = "Telegram token yoki chat id sozlanmagan."
-        murojaat.save(update_fields=["telegram_error", "updated_at"])
         return False
 
-    payload = json.dumps(
-        {
-            "chat_id": chat_id,
-            "text": _build_message(murojaat),
-        }
-    ).encode("utf-8")
-
-    request = urllib.request.Request(
-        url=f"https://api.telegram.org/bot{token}/sendMessage",
-        data=payload,
-        headers={"Content-Type": "application/json"},
-        method="POST",
-    )
+    reply_markup = json.dumps(_build_status_keyboard(murojaat), ensure_ascii=False)
+    message = _build_message(murojaat)
 
     try:
-        with urllib.request.urlopen(request, timeout=10) as response:
-            response.read()
-    except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError) as exc:
-        murojaat.telegram_error = str(exc)
-        murojaat.save(update_fields=["telegram_error", "updated_at"])
+        if murojaat.attachment:
+            content_type = mimetypes.guess_type(murojaat.attachment.name)[0] or "application/octet-stream"
+            with murojaat.attachment.open("rb") as attachment_file:
+                _send_telegram_request(
+                    token=token,
+                    method="sendDocument",
+                    payload={
+                        "chat_id": chat_id,
+                        "caption": message[:1024],
+                        "reply_markup": reply_markup,
+                    },
+                    files={
+                        "document": (
+                            murojaat.attachment.name,
+                            attachment_file.read(),
+                            content_type,
+                        )
+                    },
+                )
+        else:
+            _send_telegram_request(
+                token=token,
+                method="sendMessage",
+                payload={
+                    "chat_id": chat_id,
+                    "text": message,
+                    "reply_markup": _build_status_keyboard(murojaat),
+                },
+            )
+    except (OSError, ValueError, urllib.error.URLError, urllib.error.HTTPError, TimeoutError):
         return False
 
-    murojaat.telegram_sent_at = timezone.now()
-    murojaat.telegram_error = ""
-    murojaat.save(update_fields=["telegram_sent_at", "telegram_error", "updated_at"])
+    return True
+
+
+def handle_telegram_callback(callback_query):
+    token, _ = _get_telegram_credentials()
+    if not token:
+        return False
+
+    data = callback_query.get("data", "")
+    prefix = "murojaat_status:"
+    if not data.startswith(prefix):
+        return False
+
+    try:
+        _, murojaat_id, status = data.split(":")
+        murojaat = Murojaat.objects.get(pk=int(murojaat_id))
+        if status not in Murojaat.Status.values:
+            return False
+    except (Murojaat.DoesNotExist, TypeError, ValueError):
+        return False
+
+    murojaat.status = status
+    murojaat.save(update_fields=["status", "updated_at"])
+
+    message = callback_query.get("message", {})
+    chat = message.get("chat", {})
+    message_id = message.get("message_id")
+    chat_id = chat.get("id")
+
+    try:
+        _send_telegram_request(
+            token=token,
+            method="editMessageReplyMarkup",
+            payload={
+                "chat_id": chat_id,
+                "message_id": message_id,
+                "reply_markup": _build_status_keyboard(murojaat),
+            },
+        )
+        _send_telegram_request(
+            token=token,
+            method="answerCallbackQuery",
+            payload={
+                "callback_query_id": callback_query.get("id"),
+                "text": f"Status: {murojaat.get_status_display()}",
+            },
+        )
+    except (ValueError, urllib.error.URLError, urllib.error.HTTPError, TimeoutError):
+        return False
+
     return True

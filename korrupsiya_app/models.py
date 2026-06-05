@@ -108,6 +108,12 @@ class TelegramSettings(models.Model):
 
     @classmethod
     def load(cls):
+        instance = cls.objects.order_by("pk").first()
+        if instance:
+            if instance.pk != 1:
+                instance.pk = 1
+                instance.save()
+            return instance
         instance, _ = cls.objects.get_or_create(pk=1)
         return instance
 

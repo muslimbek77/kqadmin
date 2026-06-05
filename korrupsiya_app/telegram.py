@@ -1,4 +1,5 @@
 import json
+import logging
 import mimetypes
 import os
 import urllib.error
@@ -8,6 +9,8 @@ from uuid import uuid4
 from django.conf import settings
 
 from .models import Murojaat, TelegramSettings
+
+logger = logging.getLogger(__name__)
 
 
 def _build_message(murojaat):
@@ -138,7 +141,8 @@ def send_murojaat_to_telegram(murojaat):
                     "reply_markup": _build_status_keyboard(murojaat),
                 },
             )
-    except (OSError, ValueError, urllib.error.URLError, urllib.error.HTTPError, TimeoutError):
+    except Exception:
+        logger.exception("Failed to send murojaat %s to Telegram", murojaat.pk)
         return False
 
     return True
@@ -188,7 +192,8 @@ def handle_telegram_callback(callback_query):
                 "text": f"Status: {murojaat.get_status_display()}",
             },
         )
-    except (ValueError, urllib.error.URLError, urllib.error.HTTPError, TimeoutError):
+    except Exception:
+        logger.exception("Failed to handle Telegram callback for murojaat %s", murojaat.pk)
         return False
 
     return True

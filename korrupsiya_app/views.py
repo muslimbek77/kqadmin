@@ -1,3 +1,5 @@
+import logging
+
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.db.models import Count
@@ -18,6 +20,8 @@ from .serializers import (
 )
 from .telegram import handle_telegram_callback, send_murojaat_to_telegram
 # Create your views here.
+
+logger = logging.getLogger(__name__)
 
 
 class KorrupsiyaCreateView(CreateAPIView):
@@ -70,7 +74,10 @@ class MurojaatListCreateAPIView(ListCreateAPIView):
     def create(self, request, *args, **kwargs):
         response = super().create(request, *args, **kwargs)
         instance = Murojaat.objects.get(pk=response.data["id"])
-        send_murojaat_to_telegram(instance)
+        try:
+            send_murojaat_to_telegram(instance)
+        except Exception:
+            logger.exception("Unexpected Telegram error while creating murojaat %s", instance.pk)
         response.data = self.get_serializer(instance).data
         return response
 

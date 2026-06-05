@@ -3,6 +3,14 @@
 from django.db import migrations, models
 
 
+def create_telegram_settings_if_missing(apps, schema_editor):
+    TelegramSettings = apps.get_model("korrupsiya_app", "TelegramSettings")
+    existing_tables = schema_editor.connection.introspection.table_names()
+    if TelegramSettings._meta.db_table in existing_tables:
+        return
+    schema_editor.create_model(TelegramSettings)
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -10,27 +18,37 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.CreateModel(
-            name="TelegramSettings",
-            fields=[
-                (
-                    "id",
-                    models.BigAutoField(
-                        auto_created=True,
-                        primary_key=True,
-                        serialize=False,
-                        verbose_name="ID",
-                    ),
+        migrations.SeparateDatabaseAndState(
+            database_operations=[
+                migrations.RunPython(
+                    create_telegram_settings_if_missing,
+                    migrations.RunPython.noop,
                 ),
-                ("bot_token", models.CharField(blank=True, max_length=255)),
-                ("admin_chat_id", models.CharField(blank=True, max_length=64)),
-                ("created_at", models.DateTimeField(auto_now_add=True)),
-                ("updated_at", models.DateTimeField(auto_now=True)),
             ],
-            options={
-                "verbose_name": "Telegram sozlamasi",
-                "verbose_name_plural": "Telegram sozlamalari",
-            },
+            state_operations=[
+                migrations.CreateModel(
+                    name="TelegramSettings",
+                    fields=[
+                        (
+                            "id",
+                            models.BigAutoField(
+                                auto_created=True,
+                                primary_key=True,
+                                serialize=False,
+                                verbose_name="ID",
+                            ),
+                        ),
+                        ("bot_token", models.CharField(blank=True, max_length=255)),
+                        ("admin_chat_id", models.CharField(blank=True, max_length=64)),
+                        ("created_at", models.DateTimeField(auto_now_add=True)),
+                        ("updated_at", models.DateTimeField(auto_now=True)),
+                    ],
+                    options={
+                        "verbose_name": "Telegram sozlamasi",
+                        "verbose_name_plural": "Telegram sozlamalari",
+                    },
+                ),
+            ],
         ),
         migrations.RemoveField(
             model_name="murojaat",

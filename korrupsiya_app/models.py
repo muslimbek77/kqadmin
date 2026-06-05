@@ -89,6 +89,29 @@ class Vacancy(models.Model):
         return f"{self.company} - {self.title}"
 
 
+class TelegramSettings(models.Model):
+    bot_token = models.CharField(max_length=255, blank=True)
+    admin_chat_id = models.CharField(max_length=64, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Telegram sozlamasi"
+        verbose_name_plural = "Telegram sozlamalari"
+
+    def __str__(self):
+        return "Telegram sozlamalari"
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def load(cls):
+        instance, _ = cls.objects.get_or_create(pk=1)
+        return instance
+
+
 class Murojaat(models.Model):
     class Status(models.TextChoices):
         NEW = "new", "Yangi"

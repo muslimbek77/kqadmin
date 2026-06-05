@@ -5,6 +5,8 @@ import urllib.request
 from django.conf import settings
 from django.utils import timezone
 
+from .models import TelegramSettings
+
 
 def _build_message(murojaat):
     lines = [
@@ -20,9 +22,17 @@ def _build_message(murojaat):
     return "\n".join(lines)
 
 
+def _get_telegram_credentials():
+    telegram_settings = TelegramSettings.load()
+    token = telegram_settings.bot_token or getattr(settings, "TELEGRAM_BOT_TOKEN", "")
+    default_chat_id = telegram_settings.admin_chat_id or getattr(
+        settings, "TELEGRAM_DEFAULT_CHAT_ID", ""
+    )
+    return token, default_chat_id
+
+
 def send_murojaat_to_telegram(murojaat):
-    token = getattr(settings, "TELEGRAM_BOT_TOKEN", "")
-    default_chat_id = getattr(settings, "TELEGRAM_DEFAULT_CHAT_ID", "")
+    token, default_chat_id = _get_telegram_credentials()
     chat_id = murojaat.assigned_telegram_chat_id or default_chat_id
 
     if not token or not chat_id:

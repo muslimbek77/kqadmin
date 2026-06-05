@@ -1,9 +1,45 @@
 from django.contrib import admin
-from .models import Korrupsiya, KarrupsiyaMalumot, KorrupsiyaFile, Vacancy, Murojaat
+from .models import (
+    Korrupsiya,
+    KarrupsiyaMalumot,
+    KorrupsiyaFile,
+    Vacancy,
+    TelegramSettings,
+    Murojaat,
+)
 # Register your models here.
 admin.site.register(Korrupsiya)
 admin.site.register(KarrupsiyaMalumot)
 admin.site.register(KorrupsiyaFile)
+
+
+@admin.register(TelegramSettings)
+class TelegramSettingsAdmin(admin.ModelAdmin):
+    list_display = ("masked_bot_token", "admin_chat_id", "updated_at")
+    search_fields = ("admin_chat_id",)
+    readonly_fields = ("created_at", "updated_at")
+    fieldsets = (
+        (
+            "Telegram Sozlamalari",
+            {
+                "fields": ("bot_token", "admin_chat_id", "created_at", "updated_at"),
+            },
+        ),
+    )
+
+    def has_add_permission(self, request):
+        return not TelegramSettings.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    @admin.display(description="Bot token")
+    def masked_bot_token(self, obj):
+        if not obj.bot_token:
+            return ""
+        if len(obj.bot_token) <= 8:
+            return "*" * len(obj.bot_token)
+        return f"{obj.bot_token[:4]}...{obj.bot_token[-4:]}"
 
 
 @admin.register(Vacancy)

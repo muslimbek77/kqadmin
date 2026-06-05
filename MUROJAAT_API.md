@@ -7,12 +7,18 @@ Swagger hujjati:
 
 ## Telegram sozlamalari
 
-Environment o'zgaruvchilari:
+Asosiy usul:
+
+- Django admin paneldagi `Telegram sozlamalari`
+- `bot_token`
+- `admin_chat_id`
+
+Agar `assigned_telegram_chat_id` yuborilsa, shu chat ID ishlatiladi. Aks holda admin paneldagi `admin_chat_id` ishlatiladi.
+
+Zaxira usul sifatida quyidagi environment o'zgaruvchilari ham ishlaydi:
 
 - `TELEGRAM_BOT_TOKEN`
 - `TELEGRAM_DEFAULT_CHAT_ID`
-
-Agar `assigned_telegram_chat_id` yuborilsa, shu chat ID ishlatiladi. Aks holda `TELEGRAM_DEFAULT_CHAT_ID` ishlatiladi.
 
 ## Endpointlar
 

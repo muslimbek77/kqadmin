@@ -128,9 +128,6 @@ class Murojaat(models.Model):
         choices=Status.choices,
         default=Status.NEW,
     )
-    assigned_telegram_chat_id = models.CharField(max_length=64, blank=True)
-    telegram_sent_at = models.DateTimeField(null=True, blank=True)
-    telegram_error = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

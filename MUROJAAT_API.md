@@ -20,6 +20,19 @@ Zaxira usul sifatida quyidagi environment o'zgaruvchilari ham ishlaydi:
 - `TELEGRAM_BOT_TOKEN`
 - `TELEGRAM_DEFAULT_CHAT_ID`
 
+Telegram yuborish logikasi:
+
+- agar `attachment` bo'lsa, Telegramga fayl `sendDocument` orqali yuboriladi
+- xabar tagida inline tugmalar chiqadi:
+- `Tushuntirildi`
+- `Qoniqtirildi`
+- `Rad etildi`
+- tugma bosilganda Telegram webhook orqali murojaat statusi yangilanadi
+
+Webhook endpoint:
+
+- `POST /api/telegram/webhook/`
+
 ## Endpointlar
 
 ### `POST /api/murojaatlar/`
@@ -32,7 +45,6 @@ Form-data maydonlari:
 - `address`
 - `content`
 - `attachment` (ixtiyoriy)
-- `assigned_telegram_chat_id` (ixtiyoriy)
 
 ### `GET /api/murojaatlar/`
 
@@ -41,7 +53,6 @@ Murojaatlar ro'yxati.
 Filterlar:
 
 - `status`
-- `assigned_telegram_chat_id`
 - `search`
 - `ordering`
 
@@ -77,5 +88,3 @@ Statistika qaytaradi:
 - `tushuntirildi`
 - `qoniqtirildi`
 - `rad_etildi`
-- `telegram_sent`
-- `telegram_failed`

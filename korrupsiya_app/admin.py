@@ -78,10 +78,8 @@ class MurojaatAdmin(admin.ModelAdmin):
         "id",
         "phone_number",
         "status",
-        "assigned_telegram_chat_id",
-        "telegram_sent_at",
         "created_at",
     )
-    list_filter = ("status", "created_at", "telegram_sent_at")
+    list_filter = ("status", "created_at")
     search_fields = ("phone_number", "address", "content")
-    readonly_fields = ("telegram_sent_at", "telegram_error", "created_at", "updated_at")
+    readonly_fields = ("created_at", "updated_at")

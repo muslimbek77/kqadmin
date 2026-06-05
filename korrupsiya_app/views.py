@@ -1,7 +1,10 @@
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 from django.db.models import Count
 from rest_framework.generics import CreateAPIView, ListAPIView, RetrieveAPIView, UpdateAPIView, ListCreateAPIView
 from django_filters import rest_framework as filters
 from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .models import Korrupsiya, KarrupsiyaMalumot, KorrupsiyaFile, Vacancy, Murojaat
@@ -13,7 +16,7 @@ from .serializers import (
     MurojaatSerializer,
     MurojaatStatusUpdateSerializer,
 )
-from .telegram import send_murojaat_to_telegram
+from .telegram import handle_telegram_callback, send_murojaat_to_telegram
 # Create your views here.
 
 
@@ -59,7 +62,7 @@ class MurojaatListCreateAPIView(ListCreateAPIView):
     queryset = Murojaat.objects.all()
     serializer_class = MurojaatSerializer
     filter_backends = [filters.DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ["status", "assigned_telegram_chat_id"]
+    filterset_fields = ["status"]
     search_fields = ["phone_number", "address", "content"]
     ordering_fields = ["created_at", "updated_at"]
     ordering = ["-created_at"]
@@ -97,7 +100,17 @@ class MurojaatStatisticsAPIView(APIView):
                 "tushuntirildi": status_counts.get(Murojaat.Status.TUSHUNTIRILDI, 0),
                 "qoniqtirildi": status_counts.get(Murojaat.Status.QONIQTIRILDI, 0),
                 "rad_etildi": status_counts.get(Murojaat.Status.RAD_ETILDI, 0),
-                "telegram_sent": queryset.exclude(telegram_sent_at__isnull=True).count(),
-                "telegram_failed": queryset.exclude(telegram_error="").count(),
             }
         )
+
+
+@method_decorator(csrf_exempt, name="dispatch")
+class TelegramWebhookAPIView(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    def post(self, request, *args, **kwargs):
+        callback_query = request.data.get("callback_query")
+        if callback_query and handle_telegram_callback(callback_query):
+            return Response({"ok": True})
+        return Response({"ok": False}, status=status.HTTP_400_BAD_REQUEST)

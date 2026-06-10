@@ -57,6 +57,9 @@ def _create_multipart_body(fields, files):
     for name, value in fields.items():
         body.extend(f"--{boundary}\r\n".encode("utf-8"))
         body.extend(f'Content-Disposition: form-data; name="{name}"\r\n\r\n'.encode("utf-8"))
+        # Convert dict to JSON string for reply_markup
+        if isinstance(value, dict):
+            value = json.dumps(value)
         body.extend(str(value).encode("utf-8"))
         body.extend(b"\r\n")
 

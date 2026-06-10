@@ -89,6 +89,7 @@ class VacancyDetailAPIView(RetrieveAPIView):
     serializer_class = VacancySerializer
 
 
+@method_decorator(csrf_exempt, name="dispatch")
 class MurojaatListCreateAPIView(ListCreateAPIView):
     queryset = Murojaat.objects.all()
     serializer_class = MurojaatSerializer

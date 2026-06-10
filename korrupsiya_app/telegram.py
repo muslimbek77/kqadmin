@@ -109,7 +109,6 @@ def send_murojaat_to_telegram(murojaat):
         logger.warning("Telegram token yoki chat_id topilmadi")
         return False
 
-    reply_markup = _build_status_keyboard(murojaat)
     message = _build_message(murojaat)
 
     try:
@@ -122,7 +121,6 @@ def send_murojaat_to_telegram(murojaat):
                     payload={
                         "chat_id": chat_id,
                         "caption": message[:1024],
-                        "reply_markup": reply_markup,
                     },
                     files={
                         "document": (
@@ -140,7 +138,6 @@ def send_murojaat_to_telegram(murojaat):
                 payload={
                     "chat_id": chat_id,
                     "text": message,
-                    "reply_markup": reply_markup,
                 },
             )
             logger.info(f"Telegram message yuborildi: {result}")

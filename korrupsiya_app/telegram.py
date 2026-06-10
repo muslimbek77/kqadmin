@@ -34,7 +34,6 @@ def _get_telegram_credentials():
 
 def _build_status_keyboard(murojaat):
     from .models import Murojaat
-    import json
     
     statuses = [
         (Murojaat.Status.TUSHUNTIRILDI, "Tushuntirildi"),
@@ -50,10 +49,7 @@ def _build_status_keyboard(murojaat):
         })
     
     # Inline keyboard format: array of arrays
-    keyboard = {"inline_keyboard": [buttons]}
-    
-    # Ensure it's JSON serializable
-    return json.dumps(keyboard)
+    return {"inline_keyboard": [buttons]}
 
 
 def _create_multipart_body(fields, files):
@@ -115,6 +111,7 @@ def send_murojaat_to_telegram(murojaat):
         logger.warning("Telegram token yoki chat_id topilmadi")
         return False
 
+    reply_markup = _build_status_keyboard(murojaat)
     message = _build_message(murojaat)
 
     try:
@@ -127,6 +124,7 @@ def send_murojaat_to_telegram(murojaat):
                     payload={
                         "chat_id": chat_id,
                         "caption": message[:1024],
+                        "reply_markup": reply_markup,
                     },
                     files={
                         "document": (
@@ -144,6 +142,7 @@ def send_murojaat_to_telegram(murojaat):
                 payload={
                     "chat_id": chat_id,
                     "text": message,
+                    "reply_markup": reply_markup,
                 },
             )
             logger.info(f"Telegram message yuborildi: {result}")

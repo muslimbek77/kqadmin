@@ -33,6 +33,9 @@ def _get_telegram_credentials():
 
 
 def _build_status_keyboard(murojaat):
+    from .models import Murojaat
+    import json
+    
     statuses = [
         (Murojaat.Status.TUSHUNTIRILDI, "Tushuntirildi"),
         (Murojaat.Status.QONIQTIRILDI, "Qoniqtirildi"),
@@ -41,13 +44,16 @@ def _build_status_keyboard(murojaat):
     buttons = []
     for status_code, label in statuses:
         prefix = "✅ " if murojaat.status == status_code else ""
-        buttons.append(
-            {
-                "text": f"{prefix}{label}",
-                "callback_data": f"murojaat_status:{murojaat.pk}:{status_code}",
-            }
-        )
-    return {"inline_keyboard": [buttons]}
+        buttons.append({
+            "text": f"{prefix}{label}",
+            "callback_data": f"murojaat_status:{murojaat.pk}:{status_code}"
+        })
+    
+    # Inline keyboard format: array of arrays
+    keyboard = {"inline_keyboard": [buttons]}
+    
+    # Ensure it's JSON serializable
+    return json.dumps(keyboard)
 
 
 def _create_multipart_body(fields, files):
@@ -109,11 +115,7 @@ def send_murojaat_to_telegram(murojaat):
         logger.warning("Telegram token yoki chat_id topilmadi")
         return False
 
-    reply_markup = _build_status_keyboard(murojaat)
     message = _build_message(murojaat)
-
-    # Log credentials for debugging (be careful with production!)
-    logger.debug(f"Sending to chat_id: {chat_id}")
 
     try:
         if murojaat.attachment:
@@ -125,7 +127,6 @@ def send_murojaat_to_telegram(murojaat):
                     payload={
                         "chat_id": chat_id,
                         "caption": message[:1024],
-                        "reply_markup": reply_markup,
                     },
                     files={
                         "document": (
@@ -143,7 +144,6 @@ def send_murojaat_to_telegram(murojaat):
                 payload={
                     "chat_id": chat_id,
                     "text": message,
-                    "reply_markup": reply_markup,
                 },
             )
             logger.info(f"Telegram message yuborildi: {result}")

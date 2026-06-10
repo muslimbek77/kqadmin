@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 from ckeditor_uploader.fields import RichTextUploadingField
 # Create your models here.
 
@@ -8,8 +9,8 @@ class Korrupsiya(models.Model):
     phone = models.CharField(max_length=15, null=True, blank=True)
     description = models.TextField()
 
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
         return self.name
@@ -20,8 +21,8 @@ class KarrupsiyaMalumot(models.Model):
     text = RichTextUploadingField()
     seen_count = models.IntegerField(default=0, blank=True, null=True)
 
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
 
 
     def __str__(self):
@@ -35,8 +36,8 @@ class KorrupsiyaFile(models.Model):
     title = models.CharField(max_length=200)
     file = models.FileField(upload_to='korrupsiya_files/')
 
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
         return self.title

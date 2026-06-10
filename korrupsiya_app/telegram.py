@@ -106,6 +106,7 @@ def _send_telegram_request(token, method, payload=None, files=None):
 def send_murojaat_to_telegram(murojaat):
     token, chat_id = _get_telegram_credentials()
     if not token or not chat_id:
+        logger.warning("Telegram token yoki chat_id topilmadi")
         return False
 
     reply_markup = _build_status_keyboard(murojaat)
@@ -115,7 +116,7 @@ def send_murojaat_to_telegram(murojaat):
         if murojaat.attachment:
             content_type = mimetypes.guess_type(murojaat.attachment.name)[0] or "application/octet-stream"
             with murojaat.attachment.open("rb") as attachment_file:
-                _send_telegram_request(
+                result = _send_telegram_request(
                     token=token,
                     method="sendDocument",
                     payload={
@@ -131,8 +132,9 @@ def send_murojaat_to_telegram(murojaat):
                         )
                     },
                 )
+                logger.info(f"Telegram document yuborildi: {result}")
         else:
-            _send_telegram_request(
+            result = _send_telegram_request(
                 token=token,
                 method="sendMessage",
                 payload={
@@ -141,8 +143,9 @@ def send_murojaat_to_telegram(murojaat):
                     "reply_markup": reply_markup,
                 },
             )
-    except Exception:
-        logger.exception("Failed to send murojaat %s to Telegram", murojaat.pk)
+            logger.info(f"Telegram message yuborildi: {result}")
+    except Exception as e:
+        logger.exception(f"Failed to send murojaat {murojaat.pk} to Telegram: {str(e)}")
         return False
 
     return True

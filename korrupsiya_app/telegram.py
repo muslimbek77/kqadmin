@@ -108,7 +108,7 @@ def send_murojaat_to_telegram(murojaat):
     if not token or not chat_id:
         return False
 
-    reply_markup = json.dumps(_build_status_keyboard(murojaat), ensure_ascii=False)
+    reply_markup = _build_status_keyboard(murojaat)
     message = _build_message(murojaat)
 
     try:
@@ -138,7 +138,7 @@ def send_murojaat_to_telegram(murojaat):
                 payload={
                     "chat_id": chat_id,
                     "text": message,
-                    "reply_markup": _build_status_keyboard(murojaat),
+                    "reply_markup": reply_markup,
                 },
             )
     except Exception:
@@ -173,27 +173,60 @@ def handle_telegram_callback(callback_query):
     chat = message.get("chat", {})
     message_id = message.get("message_id")
     chat_id = chat.get("id")
+    callback_query_id = callback_query.get("id")
 
     try:
         _send_telegram_request(
             token=token,
-            method="editMessageReplyMarkup",
-            payload={
-                "chat_id": chat_id,
-                "message_id": message_id,
-                "reply_markup": _build_status_keyboard(murojaat),
-            },
-        )
-        _send_telegram_request(
-            token=token,
             method="answerCallbackQuery",
             payload={
-                "callback_query_id": callback_query.get("id"),
+                "callback_query_id": callback_query_id,
                 "text": f"Status: {murojaat.get_status_display()}",
             },
         )
     except Exception:
-        logger.exception("Failed to handle Telegram callback for murojaat %s", murojaat.pk)
-        return False
+        logger.exception(
+            "Failed to answer Telegram callback for murojaat %s", murojaat.pk
+        )
+
+    if chat_id and message_id:
+        try:
+            _send_telegram_request(
+                token=token,
+                method="editMessageReplyMarkup",
+                payload={
+                    "chat_id": chat_id,
+                    "message_id": message_id,
+                    "reply_markup": _build_status_keyboard(murojaat),
+                },
+            )
+        except Exception:
+            logger.exception(
+                "Failed to update Telegram keyboard for murojaat %s", murojaat.pk
+            )
 
     return True
+
+
+def set_telegram_webhook(webhook_url):
+    token, _ = _get_telegram_credentials()
+    if not token:
+        return False, "Telegram bot token topilmadi"
+
+    try:
+        response = _send_telegram_request(
+            token=token,
+            method="setWebhook",
+            payload={
+                "url": webhook_url,
+                "allowed_updates": ["callback_query"],
+            },
+        )
+    except Exception as exc:
+        logger.exception("Failed to set Telegram webhook")
+        return False, str(exc)
+
+    if not response.get("ok"):
+        return False, response.get("description", "Webhook o'rnatilmadi")
+
+    return True, response.get("description", "Webhook o'rnatildi")

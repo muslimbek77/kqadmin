@@ -28,9 +28,19 @@ class KorrupsiyaCreateView(CreateAPIView):
     queryset = Korrupsiya.objects.all()
     serializer_class = KorrupsiyaSerializer
   
+class KorrupsiyaUpdateView(UpdateAPIView):
+    queryset = Korrupsiya.objects.all()
+    serializer_class = KorrupsiyaSerializer
+    lookup_field = 'pk'
+  
 class KarrupsiyaMalumotListView(ListAPIView):
     queryset = KarrupsiyaMalumot.objects.all()
     serializer_class = KarrupsiyaMalumotSerializer
+
+class KorrupsiyaMalumotUpdateView(UpdateAPIView):
+    queryset = KarrupsiyaMalumot.objects.all()
+    serializer_class = KarrupsiyaMalumotSerializer
+    lookup_field = 'pk'
 
 class KorrupsiyaMalumotDetailView(RetrieveAPIView):
     queryset = KarrupsiyaMalumot.objects.all()
@@ -42,9 +52,26 @@ class KorrupsiyaMalumotDetailView(RetrieveAPIView):
         return super().retrieve(request, *args, **kwargs)
 
 
+class KorrupsiyaMalumotUpdateView(UpdateAPIView):
+    queryset = KarrupsiyaMalumot.objects.all()
+    serializer_class = KarrupsiyaMalumotSerializer
+    lookup_field = 'pk'
+
+
 class KorrupsiyaFileListView(ListAPIView):
     queryset = KorrupsiyaFile.objects.all()
     serializer_class = KorrupsiyaFileSerializer
+
+class KorrupsiyaFileUpdateView(UpdateAPIView):
+    queryset = KorrupsiyaFile.objects.all()
+    serializer_class = KorrupsiyaFileSerializer
+    lookup_field = 'pk'
+
+
+class KorrupsiyaFileUpdateView(UpdateAPIView):
+    queryset = KorrupsiyaFile.objects.all()
+    serializer_class = KorrupsiyaFileSerializer
+    lookup_field = 'pk'
 
 
 class VacancyListAPIView(ListAPIView):
@@ -118,6 +145,7 @@ class TelegramWebhookAPIView(APIView):
 
     def post(self, request, *args, **kwargs):
         callback_query = request.data.get("callback_query")
-        if callback_query and handle_telegram_callback(callback_query):
+        if callback_query:
+            handle_telegram_callback(callback_query)
             return Response({"ok": True})
-        return Response({"ok": False}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"ok": True})

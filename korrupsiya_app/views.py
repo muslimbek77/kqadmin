@@ -118,6 +118,7 @@ class TelegramWebhookAPIView(APIView):
 
     def post(self, request, *args, **kwargs):
         callback_query = request.data.get("callback_query")
-        if callback_query and handle_telegram_callback(callback_query):
+        if callback_query:
+            handle_telegram_callback(callback_query)
             return Response({"ok": True})
-        return Response({"ok": False}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"ok": True})

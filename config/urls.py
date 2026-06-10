@@ -38,6 +38,7 @@ urlpatterns = [
     path('api/schema/', schema_view, name='openapi-schema'),
     path('api/swagger/', SwaggerUIView.as_view(), name='swagger-ui'),
     path('api/', include('korrupsiya_app.urls')),
+    path('telegram/webhook/', include('korrupsiya_app.urls')),
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

@@ -109,7 +109,11 @@ def send_murojaat_to_telegram(murojaat):
         logger.warning("Telegram token yoki chat_id topilmadi")
         return False
 
+    reply_markup = _build_status_keyboard(murojaat)
     message = _build_message(murojaat)
+
+    # Log credentials for debugging (be careful with production!)
+    logger.debug(f"Sending to chat_id: {chat_id}")
 
     try:
         if murojaat.attachment:
@@ -121,6 +125,7 @@ def send_murojaat_to_telegram(murojaat):
                     payload={
                         "chat_id": chat_id,
                         "caption": message[:1024],
+                        "reply_markup": reply_markup,
                     },
                     files={
                         "document": (
@@ -138,9 +143,19 @@ def send_murojaat_to_telegram(murojaat):
                 payload={
                     "chat_id": chat_id,
                     "text": message,
+                    "reply_markup": reply_markup,
                 },
             )
             logger.info(f"Telegram message yuborildi: {result}")
+            
+            # Check if result is successful
+            if not result.get("ok"):
+                logger.error(f"Telegram API returned error: {result}")
+                return False
+    except urllib.error.HTTPError as e:
+        error_body = e.read().decode('utf-8')
+        logger.error(f"Telegram HTTP Error {e.code}: {error_body}")
+        return False
     except Exception as e:
         logger.exception(f"Failed to send murojaat {murojaat.pk} to Telegram: {str(e)}")
         return False

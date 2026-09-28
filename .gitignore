@@ -296,3 +296,6 @@ __pycache__/
 *.swp
 *.bak
 *.tmp
+
+# collectstatic natijasi — build vaqtida qayta yaratiladi
+staticfiles/

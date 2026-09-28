@@ -52,21 +52,9 @@ class KorrupsiyaMalumotDetailView(RetrieveAPIView):
         return super().retrieve(request, *args, **kwargs)
 
 
-class KorrupsiyaMalumotUpdateView(UpdateAPIView):
-    queryset = KarrupsiyaMalumot.objects.all()
-    serializer_class = KarrupsiyaMalumotSerializer
-    lookup_field = 'pk'
-
-
 class KorrupsiyaFileListView(ListAPIView):
     queryset = KorrupsiyaFile.objects.all()
     serializer_class = KorrupsiyaFileSerializer
-
-class KorrupsiyaFileUpdateView(UpdateAPIView):
-    queryset = KorrupsiyaFile.objects.all()
-    serializer_class = KorrupsiyaFileSerializer
-    lookup_field = 'pk'
-
 
 class KorrupsiyaFileUpdateView(UpdateAPIView):
     queryset = KorrupsiyaFile.objects.all()

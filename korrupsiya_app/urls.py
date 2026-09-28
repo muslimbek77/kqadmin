@@ -1,6 +1,7 @@
 from django.urls import path
 from .views import (
     KorrupsiyaCreateView, KorrupsiyaUpdateView, KarrupsiyaMalumotListView, KorrupsiyaMalumotDetailView,
+    KorrupsiyaMalumotUpdateView,
     KorrupsiyaFileListView, KorrupsiyaFileUpdateView, VacancyListAPIView, VacancyDetailAPIView,
     MurojaatListCreateAPIView, MurojaatDetailAPIView, MurojaatStatusUpdateAPIView,
     MurojaatStatisticsAPIView, TelegramWebhookAPIView,
